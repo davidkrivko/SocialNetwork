@@ -1,3 +1,11 @@
-from django.shortcuts import render
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
 
-# Create your views here.
+from users.models import UserModel
+from users.serializers import RegistrationSerializer
+
+
+class RegistrationApiView(generics.CreateAPIView):
+    serializer_class = RegistrationSerializer
+    queryset = UserModel.objects.all()
+    permission_classes = [AllowAny]
