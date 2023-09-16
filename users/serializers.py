@@ -57,11 +57,13 @@ class LastActivityUserSerializer(serializers.ModelSerializer):
         )
 
     def get_last_activity(self, obj):
-        timestamp_str = get_online_flag(obj.username)[0][1]["timestamp"]
-        timestamp_datetime = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f%z")
+        try:
+            timestamp_str = get_online_flag(obj.username)[0][1]["timestamp"]
+            timestamp_datetime = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f%z")
 
-        formatted_timestamp = timezone.localtime(timestamp_datetime).strftime(
-            "%Y-%m-%dT%H:%M:%S.%fZ"
-        )
+            formatted_timestamp = timezone.localtime(timestamp_datetime).strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            )
+        except:
+            return None
         return formatted_timestamp
-

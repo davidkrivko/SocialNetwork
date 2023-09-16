@@ -120,7 +120,6 @@ CACHES = {
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
-CACHE_TTL = 60 * 1
 
 
 # Password validation
@@ -162,7 +161,7 @@ REST_FRAMEWORK = {
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Kiev"
 
 USE_I18N = True
 
