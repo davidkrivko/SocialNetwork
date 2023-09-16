@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-kaf)9j=*@vj=xxo#8o^vd2g55ns)bdziaso=@c72h%)82s99%8"
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -54,6 +58,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "network_config.middlewares.UpdateUserActivityMiddleware",
 ]
 
 ROOT_URLCONF = "network_config.urls"
@@ -82,10 +87,40 @@ WSGI_APPLICATION = "network_config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.environ.get("PSQL_DB_NAME"),
+        "USER": os.environ.get("PSQL_USERNAME"),
+        "PASSWORD": os.environ.get("PSQL_PASSWORD"),
+        "HOST": os.environ.get("PSQL_HOSTNAME"),
+        "PORT": os.environ.get("PSQL_PORT"),
     }
 }
+
+# Redis Connection
+REDIS_HOST = os.environ.get("REDIS_HOST")
+REDIS_PORT = os.environ.get("REDIS_PORT")
+REDIS_LOCATION_STRING = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_LOCATION_STRING + "/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    },
+    "streams": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_LOCATION_STRING + "/1?decode_responses=True",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    },
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+CACHE_TTL = 60 * 1
 
 
 # Password validation
@@ -111,15 +146,14 @@ AUTH_USER_MODEL = "users.UserModel"
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "UPDATE_LAST_LOGIN": True,
 }
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 
