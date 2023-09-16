@@ -1,7 +1,11 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
+from network_config.redis import get_online_flag
 from users.models import UserModel
 
 
@@ -39,3 +43,25 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data["password"])
         user.save()
         return user
+
+
+class LastActivityUserSerializer(serializers.ModelSerializer):
+    last_activity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserModel
+        fields = (
+            "id",
+            "last_login",
+            "last_activity",
+        )
+
+    def get_last_activity(self, obj):
+        timestamp_str = get_online_flag(obj.username)[0][1]["timestamp"]
+        timestamp_datetime = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f%z")
+
+        formatted_timestamp = timezone.localtime(timestamp_datetime).strftime(
+            "%Y-%m-%dT%H:%M:%S.%fZ"
+        )
+        return formatted_timestamp
+
